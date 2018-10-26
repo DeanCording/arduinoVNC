@@ -17,28 +17,37 @@ Video:
  - RRE
  - CORRE
  - HEXTILE
- - COPYRECT (if display support it)
+ - COPYRECT
   
 ##### Not supported encodings #####
  - TIGHT
  - ZLIB
     
 ##### Supported Hardware #####
- - ESP8266 [Arduino for ESP8266](https://github.com/Links2004/Arduino)
+ - ESP8266 
  
  may run on Arduino DUE too.
 
 ##### Supported Displays #####
- - ILI9341 [library](https://github.com/Links2004/Adafruit_ILI9341)
+ - ILI9341
+ - ILI9163
+ - ST7735
+ - S6D02A1
+ - ILI9481
+ - ILI9486
+ - ILI9488
+ - HX8357D
+ - ST7789
  
-more possible using ```VNCdisplay``` Interface
+#### Supported Touch Controllers #####
+ - XPT2046
  
 ### Issues ###
-Submit issues to: https://github.com/Links2004/arduinoVNC/issues
+Submit issues to: https://github.com/DeanCording/arduinoVNC/issues
 
 ### License and credits ###
 
-The library is licensed under [GPLv2](https://github.com/Links2004/arduinoVNC/blob/master/LICENSE)
+The library is licensed under [GPLv2](https://github.com/DeanCording/arduinoVNC/blob/master/LICENSE)
 
 D3DES by Richard Outerbridge (public domain)
 
