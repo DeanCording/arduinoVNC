@@ -175,7 +175,9 @@ class arduinoVNC {
 
 
         TFT_eSPI * display;
-
+#ifdef VNC_FRAMEBUFFER
+        TFT_eSprite * fb;
+#endif
         dfb_vnc_options opt;
 
         uint8_t protocolMinorVersion;
@@ -183,9 +185,6 @@ class arduinoVNC {
         int sock;
         mousestate_t mousestate;
 
-#ifdef VNC_FRAMEBUFFER
-        FrameBuffer fb;
-#endif
         /// TCP handling
         bool read_from_rfb_server(int sock, uint8_t *out, size_t n);
         bool write_exact(int sock, char *buf, size_t n);

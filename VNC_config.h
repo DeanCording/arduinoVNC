@@ -47,7 +47,7 @@
 //#define TOUCH
 
 /// Buffers
-//#define VNC_FRAMEBUFFER
+#define VNC_FRAMEBUFFER
 
 /// Testing
 //#define FPS_BENCHMARK

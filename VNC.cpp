@@ -35,10 +35,6 @@
 
 #include "VNC.h"
 
-#ifdef VNC_FRAMEBUFFER
-#include "frameBuffer.h"
-#endif
-
 #ifdef VNC_TIGHT
 #include "tight.h"
 #endif
@@ -66,6 +62,10 @@ arduinoVNC::arduinoVNC(TFT_eSPI * _display) {
     sock = 0;
     protocolMinorVersion = 3;
     onlyFullUpdate = false;
+
+#ifdef VNC_FRAMEBUFFER
+    fb = new TFT_eSprite(display);
+#endif
 #ifdef VNC_RICH_CURSOR
     richCursorData = NULL;
     richCursorMask = NULL;
@@ -872,6 +872,7 @@ bool arduinoVNC::rfb_handle_server_message() {
 #endif
                     bool encodingResult = false;
                     //wdt_disable();
+Serial.println(rectheader.encoding);
                     switch(rectheader.encoding) {
                         case rfbEncodingRaw:
                             encodingResult = _handle_raw_encoded_message(rectheader);
@@ -1319,7 +1320,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
                 DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] subrect: x: %d y: %d w: %d h: %d\n", rect_xW, rect_yW, tile_w, tile_h);
 
 #ifdef VNC_FRAMEBUFFER
-                if(!fb.begin(tile_w, tile_h)) {
+                if(!fb->createSprite(tile_w, tile_h)) {
                     DEBUG_VNC("[_handle_hextile_encoded_message] not enough memory!\n");
 #ifdef VNC_SAVE_MEMORY
                 freeSec(buf);
@@ -1328,7 +1329,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
                 }
 
                 /* fill the background */
-                fb.fillRect(0, 0, tile_w, tile_h, bgColor);
+                fb->fillRect(0, 0, tile_w, tile_h, bgColor);
 #else
                 /* fill the background */
                 display->fillRect(rect_xW, rect_yW, tile_w, tile_h, bgColor);
@@ -1356,7 +1357,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
                             for(uint8_t n = 0; n < nr_subr; n++) {
                                 //DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] Coloured nr_subr: %d bufPC: 0x%08X\n", n, bufPC);
 #ifdef VNC_FRAMEBUFFER
-                                fb.fillRect(bufPC->x, bufPC->y, bufPC->w + 1, bufPC->h + 1, 
+                                fb->fillRect(bufPC->x, bufPC->y, bufPC->w + 1, bufPC->h + 1, 
                                   bufPC->color);
 #else
                                 display->fillRect(rect_xW + bufPC->x, rect_yW + bufPC->y, bufPC->w+1, bufPC->h+1, 
@@ -1378,7 +1379,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
 
                                 DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] nr_subr: %d bufP: 0x%08X\n", n, bufP);
 #ifdef VNC_FRAMEBUFFER
-                                fb.fillRect(bufP->x, bufP->y, bufP->w + 1, bufP->h + 1, 
+                                fb->fillRect(bufP->x, bufP->y, bufP->w + 1, bufP->h + 1, 
                                     fgColor);
 #else
                                 display->fillRect(rect_xW + bufP->x, rect_yW + bufP->y, bufP->w+1, bufP->h+1, 
@@ -1390,7 +1391,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
                     }
                 }
 #ifdef VNC_FRAMEBUFFER
-                display->pushImage(rect_xW, rect_yW, tile_w, tile_h, (uint16_t *)fb.getPtr());
+                fb->pushSprite(rect_xW, rect_yW);
 #endif
             }
             j++;
@@ -1403,7 +1404,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
 
 #ifdef VNC_SAVE_MEMORY
 #ifdef VNC_FRAMEBUFFER
-    fb.freeBuffer();
+    fb->deleteSprite();
 #endif
     freeSec(buf);
 #endif
