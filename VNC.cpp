@@ -104,10 +104,10 @@ void arduinoVNC::begin(char *_host, uint16_t _port, bool _onlyFullUpdate) {
     opt.client.bpp = 16;
     opt.client.depth = 16;
 
-#ifdef ESP32
-    opt.client.bigendian = 0;
+#if BYTE_ORDER == BIG_ENDIAN
+    opt.client.bigendian = 1
 #else
-    opt.client.bigendian = 1;
+    opt.client.bigendian = 0;
 #endif
     opt.client.truecolour = 1;
 
@@ -402,22 +402,22 @@ bool arduinoVNC::rfb_connect_to_server(const char *host, int port) {
 
 bool arduinoVNC::rfb_initialise_connection() {
     if(!_rfb_negotiate_protocol()) {
-        DEBUG_VNC("[rfb_initialise_connection] _rfb_negotiate_protocol()  Faild!\n");
+        DEBUG_VNC("[rfb_initialise_connection] _rfb_negotiate_protocol()  Failed!\n");
         return false;
     }
 
     if(!_rfb_authenticate()) {
-        DEBUG_VNC("[rfb_initialise_connection] _rfb_authenticate()  Faild!\n");
+        DEBUG_VNC("[rfb_initialise_connection] _rfb_authenticate()  Failed!\n");
         return false;
     }
 
     if(!_rfb_initialise_client()) {
-        DEBUG_VNC("[rfb_initialise_connection] _rfb_initialise_client()  Faild!\n");
+        DEBUG_VNC("[rfb_initialise_connection] _rfb_initialise_client()  Failed!\n");
         return false;
     }
 
     if(!_rfb_initialise_server()) {
-        DEBUG_VNC("[rfb_initialise_connection] _rfb_initialise_server() Faild!\n");
+        DEBUG_VNC("[rfb_initialise_connection] _rfb_initialise_server() Failed!\n");
         return false;
     }
 
@@ -876,9 +876,11 @@ bool arduinoVNC::rfb_handle_server_message() {
                         case rfbEncodingRaw:
                             encodingResult = _handle_raw_encoded_message(rectheader);
                             break;
+#ifdef VNC_COPYRECT
                         case rfbEncodingCopyRect:
                             encodingResult = _handle_copyrect_encoded_message(rectheader);
                             break;
+#endif
 #ifdef VNC_RRE
                         case rfbEncodingRRE:
                             encodingResult = _handle_rre_encoded_message(rectheader);
@@ -932,7 +934,7 @@ bool arduinoVNC::rfb_handle_server_message() {
 #endif
                     //wdt_enable(0);
                     if(!encodingResult) {
-                        DEBUG_VNC("[0x%08X][%d] encoding Faild!\n", rectheader.encoding, rectheader.encoding);
+                        DEBUG_VNC("[0x%08X][%d] encoding Failed!\n", rectheader.encoding, rectheader.encoding);
                         disconnect();
                         return false;
                     } else {
@@ -1059,12 +1061,12 @@ bool arduinoVNC::_handle_raw_encoded_message(rfbFramebufferUpdateRectHeader rect
     static uint8_t *buf = (uint8_t *) malloc(maxSize);
 #endif
 
-    DEBUG_VNC_RAW("[_handle_raw_encoded_message] x: %d y: %d w: %d h: %d bytes: %d!\n", rectheader.r.x, rectheader.r.y, rectheader.r.w, rectheader.r.h, msgSize);
+    DEBUG_VNC_RAW("[_handle_raw_encoded_message] x: %d y: %d w: %d h: %d bytes: %d\n", rectheader.r.x, rectheader.r.y, rectheader.r.w, rectheader.r.h, msgSize);
 
     if(msgSize > maxSize) {
         msgPixel = (maxSize / (opt.client.bpp / 8));
         msgSize = (msgPixel * (opt.client.bpp / 8));
-        DEBUG_VNC_RAW("[_handle_raw_encoded_message] update to big for ram split %d! Free: %d\n", msgSize, ESP.getFreeHeap());
+        DEBUG_VNC("[_handle_raw_encoded_message] update to big for ram split %d! Free: %d\n", msgSize, ESP.getFreeHeap());
     }
 
     DEBUG_VNC_RAW("[_handle_raw_encoded_message] msgPixel: %d msgSize: %d\n", msgPixel, msgSize);
@@ -1074,7 +1076,7 @@ bool arduinoVNC::_handle_raw_encoded_message(rfbFramebufferUpdateRectHeader rect
     buf = (uint8_t *) malloc(msgSize);
 #endif
     if(!buf) {
-        DEBUG_VNC("[_handle_raw_encoded_message] TO LESS MEMORY TO HANDLE DATA!");
+        DEBUG_VNC("[_handle_raw_encoded_message] NOT ENOUGH MEMORY TO HANDLE DATA! Need %d - Available %d\n", msgSize, ESP.getFreeHeap());
         return false;
     }
 
@@ -1092,8 +1094,9 @@ bool arduinoVNC::_handle_raw_encoded_message(rfbFramebufferUpdateRectHeader rect
 #endif
             return false;
         }
+
 // TODO: This is not very efficient as it does a spi_begin and spi_end for each buffer
-        display->pushColors(buf, msgPixel);
+        display->pushColors((uint16_t *)buf, msgPixel, true);
 
         msgPixelTotal -= msgPixel;
         delay(0);
@@ -1107,6 +1110,7 @@ bool arduinoVNC::_handle_raw_encoded_message(rfbFramebufferUpdateRectHeader rect
     return true;
 }
 
+#ifdef VNC_COPYRECT
 bool arduinoVNC::_handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader rectheader) {
     int src_x, src_y;
 
@@ -1118,7 +1122,7 @@ bool arduinoVNC::_handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader
         return false;
     }
 
-DEBUG_VNC_RAW("[_handle_copyrect_encoded_message]");
+    DEBUG_VNC_COPYRECT("[_handle_copyrect_encoded_message] w: %d h: %d\n", rectheader.r.w, rectheader.r.h);
     /* If RichCursor encoding is used, we should extend our
      "cursor lock area" (previously set to destination
      rectangle) to the source rectangle as well. */
@@ -1127,23 +1131,32 @@ DEBUG_VNC_RAW("[_handle_copyrect_encoded_message]");
     uint16_t * colorBuffer;
 
     colorBuffer = (uint16_t *)malloc(rectheader.r.w * rectheader.r.h * sizeof(uint16_t));
-
-    display->readRect((int32_t)(Swap16IfLE(src_x)), (int32_t)(Swap16IfLE(src_y)), 
-        (int32_t)rectheader.r.w, (int32_t)rectheader.r.h, colorBuffer);
+ 
+    if(!colorBuffer) {
+        DEBUG_VNC("[_handle_copyrect_encoded_message] NOT ENOUGH MEMORY TO HANDLE DATA! %d bytes available\n", ESP.getFreeHeap());
+        return false;
+    }
+    
+    display->readRect((uint32_t)(Swap16IfLE(src_x)), (uint32_t)(Swap16IfLE(src_y)), 
+        (uint32_t)rectheader.r.w, (uint32_t)rectheader.r.h, colorBuffer);
    
-    display->pushImage((int32_t)rectheader.r.x, (int32_t)rectheader.r.y, (int32_t)rectheader.r.w, (int32_t)rectheader.r.h,
+    display->pushImage((uint32_t)rectheader.r.x, (uint32_t)rectheader.r.y, (uint32_t)rectheader.r.w, (uint32_t)rectheader.r.h,
       colorBuffer);
 
     free(colorBuffer);
    
     return true;
 }
+#endif
 
 #ifdef VNC_RRE
 bool arduinoVNC::_handle_rre_encoded_message(rfbFramebufferUpdateRectHeader rectheader) {
     rfbRREHeader header;
     uint16_t color;
     CARD16 rect[4];
+
+    DEBUG_VNC_RRE("[_handle_rre_encoded_message] w: %d h: %d\n", rectheader.r.w, rectheader.r.h);
+   
 
     if(!read_from_rfb_server(sock, (uint8_t *) &header, sz_rfbRREHeader)) {
         return false;
@@ -1178,6 +1191,8 @@ bool arduinoVNC::_handle_corre_encoded_message(rfbFramebufferUpdateRectHeader re
     rfbRREHeader header;
     uint16_t color;
     CARD8 rect[4];
+
+    DEBUG_VNC_RAW("[_handle_corre_encoded_message] w: %d h: %d\n", rectheader.r.w, rectheader.r.h);
 
     if(!read_from_rfb_server(sock, (uint8_t *) &color, sizeof(color))) {
         return false;
@@ -1220,7 +1235,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
     uint16_t fgColor;
     uint16_t bgColor;
 
-    DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] x: %d y: %d w: %d h: %d!\n", rectheader.r.x, rectheader.r.y, rectheader.r.w, rectheader.r.h);
+    DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] x: %d y: %d w: %d h: %d\n", rectheader.r.x, rectheader.r.y, rectheader.r.w, rectheader.r.h);
 
     //alloc max nedded size
 #ifdef VNC_SAVE_MEMORY
@@ -1229,7 +1244,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
     static uint8_t * buf = (uint8_t *) malloc(255 * sizeof(HextileSubrectsColoured_t));
 #endif
     if(!buf) {
-        DEBUG_VNC("[_handle_hextile_encoded_message] too less memory!\n");
+        DEBUG_VNC("[_handle_hextile_encoded_message] not enough memory!\n");
         return false;
     }
 
@@ -1301,11 +1316,11 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
                     }
                 }
 
-                //DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] subrect: x: %d y: %d w: %d h: %d\n", rect_xW, rect_yW, tile_w, tile_h);
+                DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] subrect: x: %d y: %d w: %d h: %d\n", rect_xW, rect_yW, tile_w, tile_h);
 
 #ifdef VNC_FRAMEBUFFER
                 if(!fb.begin(tile_w, tile_h)) {
-                    DEBUG_VNC("[_handle_hextile_encoded_message] too less memory!\n");
+                    DEBUG_VNC("[_handle_hextile_encoded_message] not enough memory!\n");
 #ifdef VNC_SAVE_MEMORY
                 freeSec(buf);
 #endif
@@ -1327,7 +1342,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
 #endif
                         return false;
                     }
-                    //DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] nr_subr: %d\n", nr_subr);
+                    DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] nr_subr: %d\n", nr_subr);
                     if(nr_subr) {
                         if(subrect_encoding & rfbHextileSubrectsColoured) {
                             if(!read_from_rfb_server(sock, buf, nr_subr * 4)) {
@@ -1339,7 +1354,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
 
                             HextileSubrectsColoured_t * bufPC = (HextileSubrectsColoured_t *) buf;
                             for(uint8_t n = 0; n < nr_subr; n++) {
-                                //  DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] Coloured nr_subr: %d bufPC: 0x%08X\n", n, bufPC);
+                                //DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] Coloured nr_subr: %d bufPC: 0x%08X\n", n, bufPC);
 #ifdef VNC_FRAMEBUFFER
                                 fb.fillRect(bufPC->x, bufPC->y, bufPC->w + 1, bufPC->h + 1, 
                                   bufPC->color);
@@ -1361,7 +1376,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
                             HextileSubrects_t * bufP = (HextileSubrects_t *) buf;
                             for(uint8_t n = 0; n < nr_subr; n++) {
 
-                                //  DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] nr_subr: %d bufP: 0x%08X\n", n, bufP);
+                                DEBUG_VNC_HEXTILE("[_handle_hextile_encoded_message] nr_subr: %d bufP: 0x%08X\n", n, bufP);
 #ifdef VNC_FRAMEBUFFER
                                 fb.fillRect(bufP->x, bufP->y, bufP->w + 1, bufP->h + 1, 
                                     fgColor);

@@ -32,6 +32,7 @@
 #define VNC_TCP_TIMEOUT 5000
 
 /// VNC Encodes
+#define VNC_COPYRECT
 #define VNC_RRE
 #define VNC_CORRE
 #define VNC_HEXTILE
@@ -46,7 +47,7 @@
 //#define TOUCH
 
 /// Buffers
-#define VNC_FRAMEBUFFER
+//#define VNC_FRAMEBUFFER
 
 /// Testing
 //#define FPS_BENCHMARK
@@ -55,7 +56,7 @@
 //#define SLOW_LOOP 250
 
 /// Memory Options
-//#define VNC_SAVE_MEMORY
+#define VNC_SAVE_MEMORY
 
 #ifndef VNC_SAVE_MEMORY
 // 15KB raw input buffer
@@ -69,12 +70,14 @@
 #ifdef DEBUG_ESP_PORT
 #define DEBUG_VNC(...) DEBUG_ESP_PORT.printf( __VA_ARGS__ )
 #else
-#define DEBUG_VNC(...) os_printf( __VA_ARGS__ )
+//#define DEBUG_VNC(...) os_printf( __VA_ARGS__ )
 #endif
 #endif
 
-//#define DEBUG_VNC_RAW(...)
+#define DEBUG_VNC_RAW(...)
 #define DEBUG_VNC_HEXTILE(...)
+#define DEBUG_VNC_COPYRECT(...)
+#define DEBUG_VNC_RRE(...)
 #define DEBUG_VNC_RICH_CURSOR(...)
 
 #ifndef DEBUG_VNC
@@ -87,6 +90,14 @@
 
 #ifndef DEBUG_VNC_HEXTILE
 #define DEBUG_VNC_HEXTILE(...) DEBUG_VNC( __VA_ARGS__ )
+#endif
+
+#ifndef DEBUG_VNC_COPYRECT
+#define DEBUG_VNC_COPYRECT(...) DEBUG_VNC( __VA_ARGS__ )
+#endif
+
+#ifndef DEBUG_VNC_RRE
+#define DEBUG_VNC_RRE(...) DEBUG_VNC( __VA_ARGS__ )
 #endif
 
 #ifndef DEBUG_VNC_RICH_CURSOR

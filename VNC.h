@@ -218,9 +218,13 @@ class arduinoVNC {
         bool _handle_server_cut_text_message(rfbServerToClientMsg * msg);
 
         bool _handle_raw_encoded_message(rfbFramebufferUpdateRectHeader rectheader);
+#ifdef VNC_COPYRECT
         bool _handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader rectheader);
-#ifdef VNC_CORRE
+#endif
+#ifdef VNC_RRE
         bool _handle_rre_encoded_message(rfbFramebufferUpdateRectHeader rectheader);
+#endif
+#ifdef VNC_CORRE
         bool _handle_corre_encoded_message(rfbFramebufferUpdateRectHeader rectheader);
 #endif
 #ifdef VNC_HEXTILE

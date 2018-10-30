@@ -1,5 +1,5 @@
 /*
-   ESPVNC.ino
+   arduinoVNC.ino
 
     Created on: 20.02.2016
 
@@ -103,7 +103,7 @@ bool connectWifi(bool config) {
   WiFiManagerParameter custom_vnc_port("port", "vnc port", vnc_connection.port, 6);
   WiFiManagerParameter custom_vnc_password("password", "vnc password", vnc_connection.password, 40);
 
-  wifiManager.setDebugOutput(true);
+  wifiManager.setDebugOutput(false);
 
   // If WiFi connection continually fails, uncomment this line to reset settings.
   // wifiManager.resetSettings();
@@ -170,7 +170,7 @@ void setup(void) {
   tft.setTextColor(TFT_GREEN);
   tft.setTextSize(4);
   tft.setCursor(0, 5);
-  tft.println("ESP VNC");
+  tft.println("Arduino VNC");
 
 #ifdef TOUCH
   touch.begin(tft.width(), tft.height());
