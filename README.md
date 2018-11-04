@@ -1,7 +1,7 @@
-VNC Client for Arduino
+VNC Client for Arduino/ESP8266
 ===========================================
 
-a VNC Client for Arduino based on rfbproto.
+A VNC Client for Arduino/ESP8266 based on rfbproto.
 
 Video:
 
@@ -29,6 +29,8 @@ Video:
  may run on Arduino DUE too.
 
 ##### Supported Displays #####
+All displays supported by [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) library.
+
  - ILI9341
  - ILI9163
  - ST7735
@@ -39,8 +41,22 @@ Video:
  - HX8357D
  - ST7789
  
+ Configuration of TFT driver and connections is in libraries/TFT_eSPI/User_Setup.h
+ 
 #### Supported Touch Controllers #####
  - XPT2046
+ 
+ 
+#### Configuration
+Script uses [WiFiManager](https://github.com/tzapu/WiFiManager) to configure Wifi and VNC server connection
+details.  If the ESP8266 cannot connect to a Wifi network, it will bring up and Wifi access point with a 
+configuration web portal.
+
+Pressing the _Flash_ (Pin 0) during operation will trigger the Wifi/VNC config portal.
+
+Touching the touch screen during boot up will trigger calibration of the touch screen.
+
+ 
  
 ### Issues ###
 Submit issues to: https://github.com/DeanCording/arduinoVNC/issues

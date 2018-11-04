@@ -44,7 +44,7 @@
 //#define VNC_SEC_TYPE_TIGHT
 
 // Touch Interface
-//#define TOUCH
+#define TOUCH
 
 /// Buffers
 #define VNC_FRAMEBUFFER
@@ -75,7 +75,7 @@
 #endif
 
 
-// Indicate u=screen update area
+// Indicate upscreen update area
 //#define DEBUG_VNC_UPDATE
 
 // Output debugging messages
@@ -84,6 +84,8 @@
 #define DEBUG_VNC_COPYRECT(...)
 #define DEBUG_VNC_RRE(...)
 #define DEBUG_VNC_RICH_CURSOR(...)
+#define DEBUG_VNC_TOUCH(...)
+
 
 #ifndef DEBUG_VNC
 #define DEBUG_VNC(...)
@@ -109,4 +111,7 @@
 #define DEBUG_VNC_RICH_CURSOR(...) DEBUG_VNC( __VA_ARGS__ )
 #endif
 
+#ifndef DEBUG_VNC_TOUCH
+#define DEBUG_VNC_TOUCH(...) DEBUG_VNC( __VA_ARGS__ )
+#endif
 #endif /* VNC_CONFIG_H_ */

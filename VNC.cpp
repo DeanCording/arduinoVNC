@@ -951,7 +951,12 @@ bool arduinoVNC::rfb_handle_server_message() {
         read_from_rfb_server(sock, ((uint8_t *) &msg.scme) + 1, sz_rfbSetColourMapEntriesMsg - 1);
         break;
       case rfbBell:
-        DEBUG_VNC("Bell message. Unimplemented.\n");
+        DEBUG_VNC("Bell message\n");
+#ifdef BELL_PIN
+        digitalWrite(BELL_PIN, HIGH);
+        delay(250);
+        digitalWrite(BELL_PIN, LOW);
+#endif 
         break;
       case rfbServerCutText:
         if (!_handle_server_cut_text_message(&msg)) {
