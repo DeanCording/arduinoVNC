@@ -74,6 +74,11 @@
 #endif
 #endif
 
+
+// Indicate u=screen update area
+//#define DEBUG_VNC_UPDATE
+
+// Output debugging messages
 #define DEBUG_VNC_RAW(...)
 #define DEBUG_VNC_HEXTILE(...)
 #define DEBUG_VNC_COPYRECT(...)

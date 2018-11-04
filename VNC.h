@@ -137,10 +137,6 @@ typedef struct
 
 #include "rfbproto.h"
 
-#ifdef VNC_FRAMEBUFFER
-#include "frameBuffer.h"
-#endif
-
 
 class arduinoVNC {
     public:

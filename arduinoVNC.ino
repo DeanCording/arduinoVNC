@@ -89,8 +89,8 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 bool saveConfig = false;
 
 void saveConfigCallback () {
-    Serial.println("Saving configuration...");
-    saveConfig = true;
+  Serial.println("Saving configuration...");
+  saveConfig = true;
 }
 
 bool connectWifi(bool config) {
@@ -120,12 +120,12 @@ bool connectWifi(bool config) {
   //sets timeout until configuration portal gets turned off in seconds
   wifiManager.setTimeout(120);
 
-  if(config) {
+  if (config) {
     Serial.println("Starting Wifi Manager portal...");
     bool result = wifiManager.startConfigPortal();
 
     if (saveConfig) {
-        //read updated parameters
+      //read updated parameters
       strcpy(vnc_connection.server, custom_vnc_server.getValue());
       strcpy(vnc_connection.port, custom_vnc_port.getValue());
       strcpy(vnc_connection.password, custom_vnc_password.getValue());
@@ -133,7 +133,7 @@ bool connectWifi(bool config) {
       for (int address = 0; address < sizeof vnc_connection; address++) {
         vnc_connection.checksum += ((char *)&vnc_connection)[address];
       }
-  
+
       for (int address = 0; address < sizeof vnc_connection; address++) {
         EEPROM.write(address, ((char *)&vnc_connection)[address]);
       }
@@ -251,14 +251,14 @@ void loop() {
     vnc.disconnect();
     WiFi.disconnect();
     connectWifi(true);
-     
+
   }
 
 
   if (WiFi.status() != WL_CONNECTED) {
     vnc.reconnect();
     TFTnoWifi();
-    delay(500);
+    delay(1000);
   } else {
 #ifdef TOUCH
     if (vnc.connected()) {
