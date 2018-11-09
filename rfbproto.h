@@ -423,6 +423,8 @@ typedef struct _rfbInteractionCapsMsg {
 #define rfbEndOfContinuousUpdates 150
 #define rfbFence 248
 
+#define rfbSetDesktopSize 251
+
 /* fence flags */
 #define rfbFenceFlagBlockBefore 1
 #define rfbFenceFlagBlockAfter 2

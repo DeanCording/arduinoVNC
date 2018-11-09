@@ -295,7 +295,7 @@ bool arduinoVNC::read_from_rfb_server(int sock, uint8_t *out, size_t n) {
     }
 
     if (!TCPclient.available()) {
-      delay(0);
+      yield();
       continue;
     }
 
@@ -308,7 +308,7 @@ bool arduinoVNC::read_from_rfb_server(int sock, uint8_t *out, size_t n) {
     } else {
       //DEBUG_VNC("Receive %d left %d!\n", len, n);
     }
-    delay(0);
+    yield();
   }
   return true;
 }
@@ -1106,7 +1106,7 @@ bool arduinoVNC::_handle_raw_encoded_message(rfbFramebufferUpdateRectHeader rect
     display->pushColors((uint16_t *)buf, msgPixel, true);
 
     msgPixelTotal -= msgPixel;
-    delay(0);
+    yield();
   }
 
 #ifdef VNC_SAVE_MEMORY
@@ -1170,7 +1170,7 @@ bool arduinoVNC::_handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader
         display->readRect(src_x + segment, src_y, (uint32_t)cols, (uint32_t)rectheader.r.h, colorBuffer);
         display->pushImage((uint32_t)rectheader.r.x + segment, (uint32_t)rectheader.r.y, 
                         (uint32_t)cols, (uint32_t)rectheader.r.h, colorBuffer);
-        delay(0);
+        yield();
       }
 
       int last_segment = rectheader.r.w - segment;
@@ -1180,7 +1180,7 @@ bool arduinoVNC::_handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader
 
         display->pushImage((uint32_t)rectheader.r.x + segment, (uint32_t)rectheader.r.y, (uint32_t)last_segment,
                             (uint32_t)rectheader.r.h, colorBuffer);
-        delay(0);
+        yield();
       }
 
     } else {
@@ -1191,7 +1191,7 @@ bool arduinoVNC::_handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader
 
         display->pushImage((uint32_t)rectheader.r.x + segment, (uint32_t)rectheader.r.y, 
                         (uint32_t)cols, (uint32_t)rectheader.r.h, colorBuffer);
-        delay(0);
+        yield();
       }
 
       int last_segment = segment + cols;
@@ -1201,7 +1201,7 @@ bool arduinoVNC::_handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader
 
         display->pushImage((uint32_t)rectheader.r.x, (uint32_t)rectheader.r.y, (uint32_t)last_segment,
                             (uint32_t)rectheader.r.h, colorBuffer);
-        delay(0);
+        yield();
       }
     }
   } else {
@@ -1230,7 +1230,7 @@ bool arduinoVNC::_handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader
 
         display->pushImage((uint32_t)rectheader.r.x, (uint32_t)rectheader.r.y+segment,
                 (uint32_t)rectheader.r.w, (uint32_t)last_segment, colorBuffer);
-       delay(0);
+       yield();
       }
 
     } else {
@@ -1250,7 +1250,7 @@ bool arduinoVNC::_handle_copyrect_encoded_message(rfbFramebufferUpdateRectHeader
 
         display->pushImage((uint32_t)rectheader.r.x, (uint32_t)rectheader.r.y,
                 (uint32_t)rectheader.r.w, (uint32_t)last_segment, colorBuffer);
-       delay(0);
+       yield();
       }
     }
   }
@@ -1522,7 +1522,7 @@ bool arduinoVNC::_handle_hextile_encoded_message(rfbFramebufferUpdateRectHeader 
 #endif
       }
       j++;
-      delay(0);
+      yield();
     }
     remaining_w = rectheader.r.w;
     tile_w = 16; /* reset for next row */

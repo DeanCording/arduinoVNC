@@ -29,12 +29,13 @@
 #define VNC_H_
 
 #include "VNC_config.h"
-#include <TFT_eSPI.h>
 
 /// more save free
 #define freeSec(ptr) free(ptr); ptr = 0
 
 #include "Arduino.h"
+
+#include <TFT_eSPI.h>
 
 #ifdef USE_ARDUINO_TCP
 #ifdef ESP8266

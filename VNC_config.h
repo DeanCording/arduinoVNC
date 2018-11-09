@@ -43,9 +43,6 @@
 //#define VNC_RICH_CURSOR
 //#define VNC_SEC_TYPE_TIGHT
 
-// Touch Interface
-#define TOUCH
-
 /// Buffers
 #define VNC_FRAMEBUFFER
 

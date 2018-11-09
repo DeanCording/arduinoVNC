@@ -10,7 +10,6 @@
     - TFT_eSPI (https://github.com/Bodmer/TFT_eSPI)
 */
 
-
 #include <Arduino.h>
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
@@ -23,8 +22,6 @@
 #include <SPI.h>
 #include <EEPROM.h>
 
-
-// Configure TFT driver and connections in libraries/TFT_eSPI/User_Setup.h
 #include <TFT_eSPI.h>
 
 #include "VNC.h"
@@ -40,7 +37,7 @@ struct {
   char server[40];
   char port[6];
   char password[40];
-#ifdef TOUCH
+#ifdef TOUCH_CS
   uint16_t touchCalData[5];
 #endif
 } vnc_config;
@@ -50,7 +47,7 @@ struct {
 TFT_eSPI tft = TFT_eSPI();
 arduinoVNC vnc = arduinoVNC(&tft);
 
-#ifdef TOUCH
+#ifdef TOUCH_CS
 uint16_t touchX = 0, touchY = 0;
 uint8_t touchPressure;
 #endif
@@ -158,6 +155,7 @@ bool connectWifi(bool config) {
   }
 }
 
+#ifdef TOUCH_CS
 // Code to run a touch screen calibration
 void touch_calibrate()
 {
@@ -185,6 +183,7 @@ void touch_calibrate()
 
   delay(4000);
 }
+#endif
 
 void setup(void) {
   Serial.begin(115200);
@@ -257,7 +256,7 @@ void setup(void) {
 
   connectWifi(vnc_config.checksum == 0);
 
-#ifdef TOUCH
+#ifdef TOUCH_CS
   if (vnc_config.checksum != 0) {
     tft.setTouch(vnc_config.touchCalData);
     delay(500);
@@ -304,7 +303,7 @@ void loop() {
     TFTnoWifi();
     delay(1000);
   } else {
-#ifdef TOUCH
+#ifdef TOUCH_CS
     if (vnc.connected()) {
       touchPressure = tft.getTouch(&touchX, &touchY);
 
