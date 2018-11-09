@@ -5,7 +5,7 @@ A VNC Client for Arduino/ESP8266 based on rfbproto.
 
 Video:
 
-<iframe src="https://streamable.com/s/6a111/avsjds" frameborder="0" width="100%" height="100%" allowfullscreen style="width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;"></iframe>
+[arduinoVNC on ESP8266 with ILI9341](https://streamable.com/s/6a111)
 
 
 ##### Supported features #####
